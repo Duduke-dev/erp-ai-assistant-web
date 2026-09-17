@@ -224,3 +224,86 @@ export interface RagSearchResult {
   chunkIndex: number | null
   score: number | null
 }
+
+/** ---- 工具管理 ---- */
+
+/**
+ * MyBatis-Plus 的分页对象。
+ * <p>
+ * 后端返回的字段比这里多（`orders` / `optimizeCountSql` 等），
+ * 只声明前端真正用到的部分——多声明等于给自己维护没人读的字段。
+ */
+export interface PageResult<T> {
+  records: T[]
+  total: number
+  size: number
+  current: number
+  pages: number
+}
+
+/**
+ * 动态 Tool 定义：`LlmToolVO`。
+ * <p>
+ * 这张表是**全局配置**（无 ent_code）：所有租户共用同一份 Tool 定义，
+ * 隔离发生在执行时注入 ent_code。
+ */
+export interface LlmToolVO {
+  id: number
+  toolName: string
+  toolDesc: string | null
+  inputSchema: string | null
+  sqlTemplate: string | null
+  tableAlias: string | null
+  resultLimit: number | null
+  status: string
+  remark: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** 动态 Tool 新增/更新入参：`LlmToolSaveDTO`。主键来自 URL，故不含 id */
+export interface LlmToolSaveDTO {
+  toolName: string
+  toolDesc?: string | null
+  inputSchema?: string | null
+  sqlTemplate?: string | null
+  tableAlias?: string | null
+  resultLimit?: number | null
+  status?: string | null
+  remark?: string | null
+}
+
+/** 动态 Tool 分页查询条件：`LlmToolQueryDTO` */
+export interface LlmToolQuery {
+  keyword?: string
+  status?: string
+  pageNo?: number
+  pageSize?: number
+}
+
+/** Tool 调用流水：`ToolCallLogVO`。`arguments` 是模型实际入参，排查"模型为什么这么调"的关键证据 */
+export interface ToolCallLogVO {
+  id: number
+  conversationId: string | null
+  traceId: string | null
+  toolName: string
+  toolSource: string | null
+  modelName: string | null
+  mode: string | null
+  arguments: string | null
+  status: string | null
+  elapsedMs: number | null
+  resultCount: number | null
+  errorSummary: string | null
+  createdAt: string
+}
+
+/** Tool 调用流水查询条件：`ToolCallLogQueryDTO` */
+export interface ToolCallLogQuery {
+  toolName?: string
+  status?: string
+  toolSource?: string
+  traceId?: string
+  pageNo?: number
+  pageSize?: number
+}

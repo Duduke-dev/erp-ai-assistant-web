@@ -30,6 +30,11 @@ const router = createRouter({
           name: 'knowledge',
           component: () => import('@/views/KnowledgeView.vue'),
         },
+        {
+          path: 'tools',
+          name: 'tools',
+          component: () => import('@/views/ToolView.vue'),
+        },
       ],
     },
     // 未匹配路径回对话页：这是本项目的主入口，比停在 404 更有用
