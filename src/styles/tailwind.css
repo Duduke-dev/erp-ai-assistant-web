@@ -1,0 +1,48 @@
+/*
+ * Tailwind v4 选择性导入：只取 theme 与 utilities，**刻意不引 preflight**。
+ *
+ * preflight 会重置 button / input / 标题 / 列表等基础样式，而本项目的主样式系统是
+ * Naive UI（组件自带完整样式）。两套 reset 叠加会把 Naive 组件外观改坏，
+ * 且症状零散——表现为"某个组件看着怪怪的"，很难定位到是 reset 冲突。
+ *
+ * 保留 @layer 声明是必须的：utilities 的层级优先级依赖它，删掉会让工具类的
+ * 覆盖关系反过来（Naive 组件样式会压住 Tailwind 工具类）。
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/*
+ * 极小的一层自定基线。preflight 缺席意味着浏览器默认样式仍在生效，
+ * 这里只补真正必要的几条，不做通用 reset。
+ */
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 滚动条：默认样式在亮色主题下过于突兀，且会挤压内容宽度 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
