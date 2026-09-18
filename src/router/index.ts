@@ -35,6 +35,16 @@ const router = createRouter({
           name: 'tools',
           component: () => import('@/views/ToolView.vue'),
         },
+        {
+          path: 'billing',
+          name: 'billing',
+          component: () => import('@/views/BillingView.vue'),
+        },
+        {
+          path: 'platform',
+          name: 'platform',
+          component: () => import('@/views/PlatformView.vue'),
+        },
       ],
     },
     // 未匹配路径回对话页：这是本项目的主入口，比停在 404 更有用

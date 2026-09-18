@@ -307,3 +307,148 @@ export interface ToolCallLogQuery {
   pageNo?: number
   pageSize?: number
 }
+
+/** ---- 计费 ---- */
+
+/**
+ * 计费账户：`BillingAccountVO`。
+ * <p>
+ * `remainingQuota` 由**服务端算好下发**——前端不要自己 `monthlyQuota - usedTokens`，
+ * 那会把"究竟减不减得动、负数怎么处理"变成各处各写一遍的隐式约定。
+ */
+export interface BillingAccountVO {
+  /** 账户主键：充值（`/accounts/{id}/recharges`）与改套餐（`PUT /accounts/{id}`）都以它定位 */
+  id: number
+  planCode: string | null
+  balance: number | null
+  monthlyQuota: number | null
+  usedTokens: number | null
+  remainingQuota: number | null
+  status: string | null
+}
+
+/**
+ * 账户开户/更新入参：`BillingAccountSaveDTO`。
+ * <p>
+ * `monthlyQuota` 与 `planCode` 一起给出是**刻意的**：账户持有套餐的**快照**，
+ * 套餐后来调价调额不应追溯影响已签约账户。
+ */
+export interface BillingAccountSaveDTO {
+  planCode?: string | null
+  monthlyQuota?: number | null
+  status?: string | null
+}
+
+/** 充值入参：`BillingRechargeDTO`。金额必须为正，扣费不走这个接口 */
+export interface BillingRechargeDTO {
+  amount: number
+  remark?: string | null
+}
+
+/** 用量汇总行：`TokenUsageVO`。`bucket` 按天为 `yyyy-MM-dd`，按账期为 `yyyy-MM` */
+export interface TokenUsageVO {
+  bucket: string
+  modelName: string | null
+  totalTokens: number | null
+  requestCount: number | null
+}
+
+/** 套餐：`BillingPlanVO` */
+export interface BillingPlanVO {
+  id: number
+  planCode: string
+  planName: string
+  monthlyQuota: number | null
+  price: number | null
+}
+
+/** 套餐新增/更新入参：`BillingPlanSaveDTO`。`planCode` **只在新增时生效** */
+export interface BillingPlanSaveDTO {
+  planCode?: string | null
+  planName?: string | null
+  monthlyQuota?: number | null
+  price?: number | null
+}
+
+/** 价格规则：`BillingPriceRuleVO`。价格是带生效日期的历史记录 */
+export interface BillingPriceRuleVO {
+  id: number
+  modelName: string
+  inputPrice: number | null
+  outputPrice: number | null
+  effectiveDate: string | null
+}
+
+/** 价格规则入参：`BillingPriceRuleSaveDTO`。**没有更新接口**——调价请新增更晚生效的一条 */
+export interface BillingPriceRuleSaveDTO {
+  modelName: string
+  inputPrice: number
+  outputPrice: number
+  effectiveDate: string
+}
+
+/** 交易流水：`BillingTransactionVO`。`amount` 扣费为负，`balanceAfter` 便于逐笔对账 */
+export interface BillingTransactionVO {
+  id: number
+  transactionNo: string
+  type: string
+  amount: number | null
+  balanceAfter: number | null
+  tokens: number | null
+  remark: string | null
+  createdAt: string
+}
+
+/** 发票：`BillingInvoiceVO` */
+export interface BillingInvoiceVO {
+  id: number
+  period: string
+  totalTokens: number | null
+  totalAmount: number | null
+  createdAt: string
+}
+
+/** ---- 平台管理 ---- */
+
+/** 租户：`TenantVO`。平台视角，跨租户列出（因此不复用任何"本租户视角"的 VO） */
+export interface TenantVO {
+  id: number
+  entCode: string
+  entName: string
+  status: string
+  createdAt: string
+}
+
+/**
+ * 租户新增/更新入参：`TenantSaveDTO`。
+ * <p>
+ * `entCode` **只在新增时生效**：它是隔离键，改编码等于换了一个租户，
+ * 原有数据会全部"找不到"。没有删除接口——停用请把 `status` 置为 `disabled`。
+ */
+export interface TenantSaveDTO {
+  entCode?: string | null
+  entName?: string | null
+  status?: string | null
+}
+
+/** 本租户用户：`TenantUserVO`。刻意不含密码散列 */
+export interface TenantUserVO {
+  id: number
+  username: string
+  realName: string | null
+  phone: string | null
+  status: string
+  roleCode: string | null
+  roleName: string | null
+  createdAt: string
+}
+
+/** 用户新增/更新入参：`UserSaveDTO`。`password` 更新时选填，为空表示不改密码 */
+export interface UserSaveDTO {
+  username?: string | null
+  password?: string | null
+  realName?: string | null
+  phone?: string | null
+  roleCode?: string | null
+  status?: string | null
+}

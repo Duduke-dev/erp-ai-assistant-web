@@ -13,11 +13,12 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-/** 后续页面（计费 / 租户）也挂在这里 */
 const NAV_ITEMS = [
   { name: 'chat', label: '对话' },
   { name: 'knowledge', label: '知识库' },
   { name: 'tools', label: '工具管理' },
+  { name: 'billing', label: '计费' },
+  { name: 'platform', label: '平台管理' },
 ] as const
 
 async function handleLogout(): Promise<void> {
