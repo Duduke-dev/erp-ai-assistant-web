@@ -59,28 +59,6 @@ export interface RagCitation {
   excerpt: string
 }
 
-/** 图表类型：与后端 `ChartType` 的 code 一一对应（共 8 种） */
-export type ChartType = 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'heatmap' | 'funnel' | 'gauge'
-
-/** 一条数据系列 */
-export interface ChartSeries {
-  name: string
-  values: number[]
-}
-
-/**
- * 图表协议：`ChartSpec`。
- *
- * **纯数据**——前端只按 `type` 选择渲染方式，绝不执行其中任何内容。
- * 这是后端刻意设计的约束：即使模型输出被污染，最坏也只是画出一张奇怪的图。
- */
-export interface ChartSpec {
-  type: ChartType
-  title: string
-  categories: string[]
-  series: ChartSeries[]
-}
-
 /** 非流式提问结果：`AskVO` */
 export interface AskVO {
   conversationId: string
@@ -89,7 +67,6 @@ export interface AskVO {
   mode: ChatMode
   citations: RagCitation[]
   ragDocCount: number
-  chart: ChartSpec | null
   promptTokens: number
   completionTokens: number
   totalTokens: number

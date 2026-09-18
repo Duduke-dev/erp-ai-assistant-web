@@ -4,9 +4,9 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import * as chatApi from '@/api/chat'
 import { ApiError } from '@/api/http'
-import ChartPanel from '@/components/ChartPanel.vue'
 import CitationList from '@/components/CitationList.vue'
-import type { ChatMessageVO, ChartSpec, ConversationVO, RagCitation, StreamDone } from '@/types/api'
+import MarkdownViewer from '@/components/MarkdownViewer.vue'
+import type { ChatMessageVO, ConversationVO, RagCitation, StreamDone } from '@/types/api'
 import { formatRelativeTime } from '@/utils/time'
 
 /** 界面上的消息。与后端 `ChatMessageVO` 的区别：多了流式状态与耗时摘要 */
@@ -15,7 +15,6 @@ interface UiMessage {
   role: 'user' | 'assistant'
   content: string
   citations: RagCitation[]
-  chart: ChartSpec | null
   status: 'streaming' | 'completed' | 'cancelled' | 'failed'
   summary: string | null
 }
@@ -132,7 +131,6 @@ async function send(): Promise<void> {
     role: 'user',
     content: text,
     citations: [],
-    chart: null,
     status: 'completed',
     summary: null,
   })
@@ -141,7 +139,6 @@ async function send(): Promise<void> {
     role: 'assistant',
     content: '',
     citations: [],
-    chart: null,
     status: 'streaming',
     summary: null,
   })
@@ -172,12 +169,6 @@ async function send(): Promise<void> {
           const target = current()
           if (target) {
             target.citations = payload.citations
-          }
-        },
-        onChart: (chart) => {
-          const target = current()
-          if (target) {
-            target.chart = chart
           }
         },
         onDone: (done) => finish(current(), done),
@@ -236,7 +227,6 @@ function toUiMessage(message: ChatMessageVO): UiMessage {
     role: message.role,
     content: message.content ?? '',
     citations: message.citations ?? [],
-    chart: null,
     status: 'completed',
     summary: message.elapsedMs != null ? `${message.elapsedMs} ms · ${message.totalTokens ?? 0} tokens` : null,
   }
@@ -309,7 +299,9 @@ onBeforeUnmount(() => {
       <header class="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-2">
         <div class="flex items-center gap-3">
           <NSelect v-model:value="mode" :options="MODE_OPTIONS" size="small" class="w-[190px]" />
-          <span class="text-[12px] text-gray-400">auto 挂业务工具；knowledge 只查知识库</span>
+          <span class="text-[12px] text-gray-400">
+            auto：业务数据 + 知识库；data：仅业务数据；knowledge：仅知识库
+          </span>
         </div>
       </header>
 
@@ -324,7 +316,15 @@ onBeforeUnmount(() => {
               class="max-w-[85%] rounded-lg px-3 py-2 text-[13px] leading-6"
               :class="item.role === 'user' ? 'bg-blue-600 text-white' : 'border border-gray-200 bg-white text-gray-800'"
             >
-              <div class="whitespace-pre-wrap break-words">{{ item.content }}</div>
+              <!--
+                用户提问按纯文本渲染：不做 Markdown 解析——既避免把用户的输入当标记处理，
+                也少一条"用户输入 → HTML"的路径。
+                助手回答用 Markdown 渲染（模型按要求输出表格/列表/加粗）。
+              -->
+              <div v-if="item.role === 'user'" class="whitespace-pre-wrap break-words">
+                {{ item.content }}
+              </div>
+              <MarkdownViewer v-else :content="item.content" />
 
               <div v-if="item.role === 'assistant' && item.status === 'streaming'" class="mt-1 text-[12px] text-gray-400">
                 正在生成…
@@ -332,7 +332,6 @@ onBeforeUnmount(() => {
               <div v-if="item.summary" class="mt-1 text-[12px] text-gray-400">{{ item.summary }}</div>
               <div v-if="item.status === 'failed'" class="mt-1 text-[12px] text-red-500">生成失败</div>
 
-              <ChartPanel v-if="item.chart" :chart="item.chart" class="mt-3" />
               <CitationList :citations="item.citations" />
             </div>
           </div>

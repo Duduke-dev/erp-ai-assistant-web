@@ -3,7 +3,6 @@ import type {
   AskPayload,
   AskVO,
   ChatMessageVO,
-  ChartSpec,
   ConversationVO,
   StreamCitations,
   StreamDelta,
@@ -19,7 +18,6 @@ export interface StreamHandlers {
   onMeta?: (payload: StreamMeta) => void
   onDelta?: (text: string) => void
   onCitations?: (payload: StreamCitations) => void
-  onChart?: (chart: ChartSpec) => void
   onDone?: (payload: StreamDone) => void
   onError?: (payload: StreamError) => void
 }
@@ -174,9 +172,6 @@ function dispatch(frame: string, handlers: StreamHandlers): void {
       break
     case 'citations':
       handlers.onCitations?.(payload as StreamCitations)
-      break
-    case 'chart':
-      handlers.onChart?.(payload as ChartSpec)
       break
     case 'done':
       handlers.onDone?.(payload as StreamDone)
