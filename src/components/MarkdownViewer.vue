@@ -134,7 +134,17 @@ const renderedHtml = computed(() => {
   color: #4b5563;
 }
 
+/*
+ * 宽表格必须能横向滚动。
+ * 消息区外层是 overflow-hidden（见 ChatView 的三层布局），如果这里不处理，
+ * 列多的表格（ERP 查询动辄 6~10 列）会被**直接裁掉**，而且用户无法查看被裁的部分——
+ * 表现为「表格看起来没问题，只是右边少了几个字段」，很难被意识到。
+ */
 .markdown-body :deep(table) {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
   margin: 0.5em 0;
   border-collapse: collapse;
   font-size: 12px;
