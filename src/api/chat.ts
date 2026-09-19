@@ -9,6 +9,7 @@ import type {
   StreamDone,
   StreamError,
   StreamMeta,
+  StreamWarning,
 } from '@/types/api'
 
 const STREAM_PATH = '/api/chat/ask/stream'
@@ -18,6 +19,7 @@ export interface StreamHandlers {
   onMeta?: (payload: StreamMeta) => void
   onDelta?: (text: string) => void
   onCitations?: (payload: StreamCitations) => void
+  onWarning?: (payload: StreamWarning) => void
   onDone?: (payload: StreamDone) => void
   onError?: (payload: StreamError) => void
 }
@@ -172,6 +174,9 @@ function dispatch(frame: string, handlers: StreamHandlers): void {
       break
     case 'citations':
       handlers.onCitations?.(payload as StreamCitations)
+      break
+    case 'warning':
+      handlers.onWarning?.(payload as StreamWarning)
       break
     case 'done':
       handlers.onDone?.(payload as StreamDone)

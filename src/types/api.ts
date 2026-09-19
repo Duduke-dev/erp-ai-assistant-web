@@ -120,6 +120,22 @@ export interface StreamCitations {
 
 export interface StreamError {
   code: string
+  /** 面向用户的提示文案 */
+  message: string
+  /**
+   * 原始异常摘要，**仅开发环境**下发（后端 `app.chat.expose-error-detail` 控制）。
+   * 生产环境为 null —— 它可能含表名、SQL 片段、内网地址与文件路径。
+   * 因此**不渲染到界面**，只在开发模式下打到控制台，便于和问题对上号。
+   */
+  detail?: string | null
+}
+
+/**
+ * 数据缺失提示（`warning` 事件）。
+ * 问题属于「要业务数据」的类型，但本轮没拿到任何非空查询结果——
+ * 此时回答里的数字可能不是来自系统查询，界面上应显著提示。
+ */
+export interface StreamWarning {
   message: string
 }
 

@@ -15,6 +15,12 @@ interface UiMessage {
   role: 'user' | 'assistant'
   content: string
   citations: RagCitation[]
+  /**
+   * 数据缺失提示（后端 `warning` 事件）。
+   * 只在「问题要业务数据、但本轮没查到」时出现，属于**回答的成功结果**而非错误，
+   * 因此不改变 status，只在正文旁显著提示。
+   */
+  warning: string | null
   status: 'streaming' | 'completed' | 'cancelled' | 'failed'
   summary: string | null
 }
@@ -131,6 +137,7 @@ async function send(): Promise<void> {
     role: 'user',
     content: text,
     citations: [],
+    warning: null,
     status: 'completed',
     summary: null,
   })
@@ -139,6 +146,7 @@ async function send(): Promise<void> {
     role: 'assistant',
     content: '',
     citations: [],
+    warning: null,
     status: 'streaming',
     summary: null,
   })
@@ -171,6 +179,12 @@ async function send(): Promise<void> {
             target.citations = payload.citations
           }
         },
+        onWarning: (payload) => {
+          const target = current()
+          if (target) {
+            target.warning = payload.message
+          }
+        },
         onDone: (done) => finish(current(), done),
         onError: (payload) => {
           const target = current()
@@ -179,6 +193,12 @@ async function send(): Promise<void> {
             target.content = target.content || payload.message
           }
           message.error(payload.message)
+          // detail 只在开发模式打到控制台，**不进界面**：
+          // 它可能含表名、SQL 片段、内网地址（后端默认也不下发）。
+          // 放在这里是让开发时不必再翻服务端日志就能对上账。
+          if (import.meta.env.DEV && payload.detail) {
+            console.error(`[SSE ${payload.code}] ${payload.detail}`)
+          }
         },
       },
       controller.signal,
@@ -227,6 +247,9 @@ function toUiMessage(message: ChatMessageVO): UiMessage {
     role: message.role,
     content: message.content ?? '',
     citations: message.citations ?? [],
+    // 历史消息不回放数据缺失提示：它只对「刚产生的那一轮」有提示价值，
+    // 翻旧会话时满屏警告反而会淹没内容
+    warning: null,
     status: 'completed',
     summary: message.elapsedMs != null ? `${message.elapsedMs} ms · ${message.totalTokens ?? 0} tokens` : null,
   }
@@ -324,7 +347,19 @@ onBeforeUnmount(() => {
               <div v-if="item.role === 'user'" class="whitespace-pre-wrap break-words">
                 {{ item.content }}
               </div>
-              <MarkdownViewer v-else :content="item.content" />
+              <template v-else>
+                <!--
+                  数据缺失提示：放在正文**之前**，因为它的作用是「别急着相信下面的数字」，
+                  摆在后面的话用户已经读完了。用琥珀色而非红色——回答本身是成功的，只是依据可疑。
+                -->
+                <div
+                  v-if="item.warning"
+                  class="mb-2 rounded border border-amber-300 bg-amber-50 px-2 py-1.5 text-[12px] leading-relaxed text-amber-800"
+                >
+                  ⚠️ {{ item.warning }}
+                </div>
+                <MarkdownViewer :content="item.content" />
+              </template>
 
               <div v-if="item.role === 'assistant' && item.status === 'streaming'" class="mt-1 text-[12px] text-gray-400">
                 正在生成…
